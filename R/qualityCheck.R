@@ -2,13 +2,22 @@
 #'
 #'Takes in the Excel file output from the HTG EdgeSeq analysis software and performs a quality check, normalisation and annotation.
 #'
+#'
 #'@param data.in
 #'The raw count data
+#'
 #'@param TableOut
-#'Whether intermediate files will be written
-#'If TRUE, the script will write the clean dataset contaning only the genes of interest
+#'Whether intermediate files will be written.
+#'If TRUE, the script will write the clean dataset contaning only the genes of interest.
+#'
+#'#'@param PreFormatted
+#'Whether the original file was pre formatted.
+#'If TRUE, the first row should correspond to sample names, and the first column to gene names.
 #'
 #'@details
+#'The original excel file should contain a sheet named "Data", a "Sample Name" box should be present, and the first positive control should be named "ANT1".
+#'Alternatively, format the excel file and use the PreFormatted option.
+#'
 #'The quality check is performed on 4 positive control and 4 negative control genes.
 #'For the positive controls, samples are considered failures if the percentage of reads allocated to the positive controls is greater than 40%.
 #'For the negative controls, samples are considered failures if the deviation from the expected values is greater than twice the standard deviation accross all samples deviations from the expected value.
@@ -20,7 +29,7 @@
 #'
 
 
-qualityCheck <- function(data.in, TableOut=FALSE){
+qualityCheck <- function(data.in, TableOut=FALSE, PreFormatted=FALSE){
 
   # set working directory where file is located
   spl <- unlist(strsplit(data.in, "/"))
@@ -29,19 +38,36 @@ qualityCheck <- function(data.in, TableOut=FALSE){
 
   # read data
   options(stringsAsFactors = F)
-  data <- as.data.frame(read_excel(data.in, "Data"))
 
-  # get index of sample names and gene starting position
-  ind.id <- match("Sample Name", data[,1])
-  ind.genes <- match("ANT1", data[,1])
+  if (PreFormatted == TRUE){
 
-  # gene-only data
-  samples.id <- data[ind.id,-1]
-  data <- data[ind.genes:nrow(data),]
-  row.names(data) <- data[,1]
-  data <- data[,-1]
-  data <- as.data.frame(t(apply(data, 1, function(x) as.numeric(as.character(x)))))
-  colnames(data) <- samples.id
+    data <- as.data.frame(read_excel(data.in))
+    row.names(data) <- data[,1]
+    data <- data[,-1]
+  }
+
+  else {
+
+    # checks
+    assertthat::assert_that(!is.na(match("Data", excel_sheets(data.in))), msg = "Excel file should contain a 'Data' sheet")
+    assertthat::assert_that(!is.na(match("Sample Names", data[,1])), msg = "File should contain a 'Sample Name' box")
+    assertthat::assert_that(!is.na(match("ANT1", data[,1])), msg = "First positive control should be termed 'ANT1'")
+
+    # read data
+    data <- as.data.frame(read_excel(data.in, "Data"))
+
+    # get index of sample names and gene starting position
+    ind.id <- match("Sample Name", data[,1])
+    ind.genes <- match("ANT1", data[,1])
+
+    # gene-only data
+    samples.id <- data[ind.id,-1]
+    data <- data[ind.genes:nrow(data),]
+    row.names(data) <- data[,1]
+    data <- data[,-1]
+    data <- as.data.frame(t(apply(data, 1, function(x) as.numeric(as.character(x)))))
+    colnames(data) <- samples.id
+  }
 
   # library size
   lib_size <- colSums(data)
