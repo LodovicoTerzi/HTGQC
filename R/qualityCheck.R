@@ -10,7 +10,7 @@
 #'Whether intermediate files will be written.
 #'If TRUE, the script will write the clean dataset contaning only the genes of interest.
 #'
-#'#'@param PreFormatted
+#'@param PreFormatted
 #'Whether the original file was pre formatted.
 #'If TRUE, the first row should correspond to sample names, and the first column to gene names.
 #'

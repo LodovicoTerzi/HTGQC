@@ -10,10 +10,9 @@ qualityCheck(data.in, TableOut = FALSE, PreFormatted = FALSE)
 \item{data.in}{The raw count data}
 
 \item{TableOut}{Whether intermediate files will be written.
-If TRUE, the script will write the clean dataset contaning only the genes of interest.
+If TRUE, the script will write the clean dataset contaning only the genes of interest.}
 
-#'@param PreFormatted
-Whether the original file was pre formatted.
+\item{PreFormatted}{Whether the original file was pre formatted.
 If TRUE, the first row should correspond to sample names, and the first column to gene names.}
 }
 \value{
