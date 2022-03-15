@@ -4,22 +4,21 @@
 \alias{readHTG}
 \title{Extract count data from HTG EdgeSeq software's output file}
 \usage{
-readHTG(data.in)
+readHTG(data.in, PreFormatted = FALSE)
 }
 \arguments{
-\item{data.in}{The excel file as output from HTG EdgeSeq analysis platform}
+\item{data.in}{The absolute path to the excel file with HTG EdgeSeq analysis platform data}
 
-\item{path.out}{The output path where a new folder containing the results will be saved (optional).
-If not specified, the current working directory is used.}
+\item{PreFormatted}{Whether the original file was pre formatted.
+If FALSE, the excel is the output from the HTG EdgeSeq analysis platform. This includes a "Data" sheet, a box termed "Sample Names", and the fist positive control should be termed ANT1.
+If TRUE, the preformatted excel should contain sample names in the first row should, while the first column should corrspond to gene names.}
 }
 \value{
-A folder contaiing two plots and two summary table, one the for positive and the negative control genes.
+A dataframe to be used for other functions in the package. This still includes the positive and negative controls.
 }
 \description{
-Takes in the Excel file output from the HTG EdgeSeq analysis software and performs a quality check, normalisation and annotation.
+Takes in the Excel file output from the HTG EdgeSeq analysis software and prepare table for quality check
 }
 \details{
-The quality check is performed on 4 positive control and 4 negative control genes.
-For the positive controls, samples are considered failures if the percentage of reads allocated to the positive controls is greater than 40%.
-For the negative controls, samples are considered failures if the deviation from the expected values is greater than twice the standard deviation accross all samples deviations from the expected value.
+The function formats and prepares an input excel file to be used for other functions in the package, mainly qualityCheck()
 }

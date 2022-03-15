@@ -4,27 +4,37 @@
 \alias{qualityCheck}
 \title{Plots and summary of Quality Check for an HTG EdgeSeq run}
 \usage{
-qualityCheck(data.in, TableOut = FALSE, PreFormatted = FALSE)
+qualityCheck(
+  data.in,
+  TableOut = FALSE,
+  PosContrNo = 4,
+  NegContrNo = 4,
+  OrderContr = "negative",
+  path.out = "current"
+)
 }
 \arguments{
-\item{data.in}{The raw count data}
+\item{data.in}{A dataframe of counts. Column names should correspond to sample names, and row names should contain gene names, including positive and negative controls}
 
 \item{TableOut}{Whether intermediate files will be written.
-If TRUE, the script will write the clean dataset contaning only the genes of interest.}
+If TRUE, the script will write the clean dataset contaning only the genes of interest, and normalised data.}
 
-\item{PreFormatted}{Whether the original file was pre formatted.
-If TRUE, the first row should correspond to sample names, and the first column to gene names.}
+\item{PosContrNo}{Number of positive controls
+
+#'@param NegContrNo
+Number of negative controls
+
+#'@param OrderContr
+Whether the dataframe contains first the positive or negative control genes, in order}
 }
 \value{
 A folder containing two plots and two summary table, one the for positive and the negative control genes.
+If TableOut is TRUE, two table are created with clean data (raw gene expression without control genes), and normalised counts (log2 cpm)
 }
 \description{
 Takes in the Excel file output from the HTG EdgeSeq analysis software and performs a quality check, normalisation and annotation.
 }
 \details{
-The original excel file should contain a sheet named "Data", a "Sample Name" box should be present, and the first positive control should be named "ANT1".
-Alternatively, format the excel file and use the PreFormatted option.
-
 The quality check is performed on 4 positive control and 4 negative control genes.
 For the positive controls, samples are considered failures if the percentage of reads allocated to the positive controls is greater than 40%.
 For the negative controls, samples are considered failures if the deviation from the expected values is greater than twice the standard deviation accross all samples deviations from the expected value.

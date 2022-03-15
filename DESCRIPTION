@@ -4,7 +4,7 @@ Title: A Pre-processing and Quality Check package for HTG Edge Seq data
 Version: 0.1.0
 Author: Lodovico Terzi di Bergamo
 Maintainer: Lodovico Terzi di Bergamo <lodovico.terzi@ior.usi.ch>
-Description: HTGQC checks the quality of RNA expression data prepared using the HTG Edge Seq assays, and prepares the data for furhter analysis by producing normalised gene counts. 
+Description: HTGQC checks the quality of RNA expression data prepared using the HTG Edge Seq assays. 
 License: What license is it under?
 LazyData: true
 RoxygenNote: 7.1.1

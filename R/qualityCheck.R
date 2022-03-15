@@ -4,19 +4,23 @@
 #'
 #'
 #'@param data.in
-#'The raw count data
+#'A dataframe of counts. Column names should correspond to sample names, and row names should contain gene names, including positive and negative controls
 #'
 #'@param TableOut
 #'Whether intermediate files will be written.
-#'If TRUE, the script will write the clean dataset contaning only the genes of interest.
+#'If TRUE, the script will write the clean dataset contaning only the genes of interest, and normalised data.
 #'
-#'@param PreFormatted
-#'Whether the original file was pre formatted.
-#'If TRUE, the first row should correspond to sample names, and the first column to gene names.
+#'@param PosContrNo
+#'Number of positive controls
+#'
+#'#'@param NegContrNo
+#'Number of negative controls
+#'
+#'#'@param OrderContr
+#'Whether the dataframe contains first the positive or negative control genes, in order
+#'
 #'
 #'@details
-#'The original excel file should contain a sheet named "Data", a "Sample Name" box should be present, and the first positive control should be named "ANT1".
-#'Alternatively, format the excel file and use the PreFormatted option.
 #'
 #'The quality check is performed on 4 positive control and 4 negative control genes.
 #'For the positive controls, samples are considered failures if the percentage of reads allocated to the positive controls is greater than 40%.
@@ -24,66 +28,42 @@
 #'
 #'@return
 #'A folder containing two plots and two summary table, one the for positive and the negative control genes.
+#'If TableOut is TRUE, two table are created with clean data (raw gene expression without control genes), and normalised counts (log2 cpm)
 #'
 #'@export
 #'
 
 
-qualityCheck <- function(data.in, TableOut=FALSE, PreFormatted=FALSE){
+qualityCheck <- function(data.in, TableOut=FALSE, PosContrNo=4, NegContrNo=4, OrderContr="negative", path.out="current"){
 
   # set working directory where file is located
-  spl <- unlist(strsplit(data.in, "/"))
-  workdir <- paste0(head(spl, length(spl)-1), collapse = "/")
-  setwd(workdir)
-
-  # read data
-  options(stringsAsFactors = F)
-
-  if (PreFormatted == TRUE){
-
-    data <- as.data.frame(read_excel(data.in))
-    row.names(data) <- data[,1]
-    data <- data[,-1]
+  if (path.out == "current"){
+    setwd(getwd())
   }
-
-  else {
-
-    # checks
-    assertthat::assert_that(!is.na(match("Data", excel_sheets(data.in))), msg = "Excel file should contain a 'Data' sheet")
-    assertthat::assert_that(!is.na(match("Sample Names", data[,1])), msg = "File should contain a 'Sample Name' box")
-    assertthat::assert_that(!is.na(match("ANT1", data[,1])), msg = "First positive control should be termed 'ANT1'")
-
-    # read data
-    data <- as.data.frame(read_excel(data.in, "Data"))
-
-    # get index of sample names and gene starting position
-    ind.id <- match("Sample Name", data[,1])
-    ind.genes <- match("ANT1", data[,1])
-
-    # gene-only data
-    samples.id <- data[ind.id,-1]
-    data <- data[ind.genes:nrow(data),]
-    row.names(data) <- data[,1]
-    data <- data[,-1]
-    data <- as.data.frame(t(apply(data, 1, function(x) as.numeric(as.character(x)))))
-    colnames(data) <- samples.id
-  }
-
-  # library size
-  lib_size <- colSums(data)
+  else {setwd(path.out)}
 
   # create output directory and move to that directory
   dir.create("QC")
   setwd("QC")
 
-  if (TableOut==TRUE){
-    write.table(data, "HTG_CleanData.txt", sep="\t", quote=F, row.names = F)
-  }
-
+  data <- data.in
+  lib_size <- colSums(data)
   sample_names <- colnames(data)
 
+  ## write tables
+  if (TableOut==TRUE){
+    data_clean <- data[-c(1:(PosContrNo+PosContrNo)),]
+    write.table(data_clean, "HTG_CleanData.txt", sep="\t", quote=F, row.names = T)
+    write.table(cpm(data_clean, lib.size=colSums(data_clean), log=T), "HTG_CpmData.txt", sep="\t", quote=F, row.names = T)
+  }
+
+  #check argument
+  assertthat::assert_that(OrderContr %in% c("positive", "negative"), msg = "OrderContr argument should be either 'positive' or 'negative'")
+
   ## negative controls ##
-  neg <- matrix(as.numeric(as.matrix(data[1:4,])), nrow=4)
+  if (OrderContr == "negative") {neg <- matrix(as.numeric(as.matrix(data[1:NegContrNo,])), nrow=4)}
+  else {neg <- matrix(as.numeric(as.matrix(data[PosContrNo+1:PosContrNo+NegContrNo,])), nrow=4)}
+
   #plot
   cpm <- cpm(neg, lib.size=lib_size, log=T)
   mean_cpm <- colMeans(cpm)
@@ -115,8 +95,10 @@ qualityCheck <- function(data.in, TableOut=FALSE, PreFormatted=FALSE){
   write.table(table, "QC_neg_table.txt", quote=F, row.names=F, col.names=T)
 
 
-  # positive controls
-  pos <- matrix(as.numeric(as.matrix(data[5:8,])), nrow=4)
+  ## positive controls ##
+  if (OrderContr == "positive") {pos <- matrix(as.numeric(as.matrix(data[1:PosContrNo,])), nrow=4)}
+  else {pos <- matrix(as.numeric(as.matrix(data[NegContrNo+1:NegContrNo+PosContrNo,])), nrow=4)}
+
   perc2 <- colSums(pos)/lib_size
   res2 <- rep("OK", ncol(pos))
   res2[perc2 > 0.1] <- "ALERT"
