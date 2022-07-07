@@ -17,7 +17,7 @@ qualityCheck(
 \item{data.in}{A dataframe of counts. Column names should correspond to sample names, and row names should contain gene names, including positive and negative controls}
 
 \item{TableOut}{Whether intermediate files will be written.
-If TRUE, the script will write the clean dataset contaning only the genes of interest, and normalised data.}
+If TRUE, the script will write the clean dataset contaning only the genes of interest (without controls), and normalised data (log counts per million).}
 
 \item{PosContrNo}{Number of positive controls
 
@@ -25,17 +25,19 @@ If TRUE, the script will write the clean dataset contaning only the genes of int
 Number of negative controls
 
 #'@param OrderContr
-Whether the dataframe contains first the positive or negative control genes, in order}
+Whether the dataframe contains first the positive or negative control genes, in order from top to bottom}
+
+\item{path.out}{Directory where the results will be written. A new folder called QC will be created in the specified directory. If not specified, the results will be written in the current directory.}
 }
 \value{
 A folder containing two plots and two summary table, one the for positive and the negative control genes.
-If TableOut is TRUE, two table are created with clean data (raw gene expression without control genes), and normalised counts (log2 cpm)
+If TableOut is TRUE, two additional tables are created with clean data (raw gene expression without control genes), and normalised counts (log2 cpm)
 }
 \description{
-Takes in the Excel file output from the HTG EdgeSeq analysis software and performs a quality check, normalisation and annotation.
+Performs a quality check, normalisation and annotation of the HTG EdgeSeq data.
 }
 \details{
-The quality check is performed on 4 positive control and 4 negative control genes.
+The quality check is performed on 4 positive control and 4 negative control genes. The control genes should be the first rows in the dataset, followed by the genes profiled.
 For the positive controls, samples are considered failures if the percentage of reads allocated to the positive controls is greater than 40%.
-For the negative controls, samples are considered failures if the deviation from the expected values is greater than twice the standard deviation accross all samples deviations from the expected value.
+For the negative controls, samples are considered failures if the deviation from the expected values is greater than twice the standard deviation (see manuscript for details).
 }

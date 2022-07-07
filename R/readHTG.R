@@ -1,6 +1,7 @@
 #'Extract count data from HTG EdgeSeq software's output file
 #'
-#'Takes in the Excel file output from the HTG EdgeSeq analysis software and prepare table for quality check
+#'Prepares raw output from the HTG EdgeSeq analysis software for the quality check
+#'This function takes the unformatted excel file and converts it into a dataframe to be used as input for the qualityCheck() function
 #'
 #'@param data.in
 #'The absolute path to the excel file with HTG EdgeSeq analysis platform data
@@ -8,7 +9,7 @@
 #'@param PreFormatted
 #'Whether the original file was pre formatted.
 #'If FALSE, the excel is the output from the HTG EdgeSeq analysis platform. This includes a "Data" sheet, a box termed "Sample Names", and the fist positive control should be termed ANT1.
-#'If TRUE, the preformatted excel should contain sample names in the first row should, while the first column should corrspond to gene names.
+#'If TRUE, the preformatted excel should contain sample names in the first row, while the first column should corrspond to gene names.
 #'
 #'@details
 #'The function formats and prepares an input excel file to be used for other functions in the package, mainly qualityCheck()

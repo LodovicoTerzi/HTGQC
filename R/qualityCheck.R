@@ -1,6 +1,7 @@
 #'Plots and summary of Quality Check for an HTG EdgeSeq run
 #'
-#'Takes in the Excel file output from the HTG EdgeSeq analysis software and performs a quality check, normalisation and annotation.
+#'
+#'Performs a quality check, normalisation and annotation of the HTG EdgeSeq data.
 #'
 #'
 #'@param data.in
@@ -8,7 +9,7 @@
 #'
 #'@param TableOut
 #'Whether intermediate files will be written.
-#'If TRUE, the script will write the clean dataset contaning only the genes of interest, and normalised data.
+#'If TRUE, the script will write the clean dataset contaning only the genes of interest (without controls), and normalised data (log counts per million).
 #'
 #'@param PosContrNo
 #'Number of positive controls
@@ -17,18 +18,20 @@
 #'Number of negative controls
 #'
 #'#'@param OrderContr
-#'Whether the dataframe contains first the positive or negative control genes, in order
+#'Whether the dataframe contains first the positive or negative control genes, in order from top to bottom
 #'
+#'@param path.out
+#'Directory where the results will be written. A new folder called QC will be created in the specified directory. If not specified, the results will be written in the current directory.
 #'
 #'@details
 #'
-#'The quality check is performed on 4 positive control and 4 negative control genes.
+#'The quality check is performed on 4 positive control and 4 negative control genes. The control genes should be the first rows in the dataset, followed by the genes profiled.
 #'For the positive controls, samples are considered failures if the percentage of reads allocated to the positive controls is greater than 40%.
-#'For the negative controls, samples are considered failures if the deviation from the expected values is greater than twice the standard deviation accross all samples deviations from the expected value.
+#'For the negative controls, samples are considered failures if the deviation from the expected values is greater than twice the standard deviation (see manuscript for details).
 #'
 #'@return
 #'A folder containing two plots and two summary table, one the for positive and the negative control genes.
-#'If TableOut is TRUE, two table are created with clean data (raw gene expression without control genes), and normalised counts (log2 cpm)
+#'If TableOut is TRUE, two additional tables are created with clean data (raw gene expression without control genes), and normalised counts (log2 cpm)
 #'
 #'@export
 #'
@@ -61,8 +64,8 @@ qualityCheck <- function(data.in, TableOut=FALSE, PosContrNo=4, NegContrNo=4, Or
   assertthat::assert_that(OrderContr %in% c("positive", "negative"), msg = "OrderContr argument should be either 'positive' or 'negative'")
 
   ## negative controls ##
-  if (OrderContr == "negative") {neg <- matrix(as.numeric(as.matrix(data[1:NegContrNo,])), nrow=4)}
-  else {neg <- matrix(as.numeric(as.matrix(data[PosContrNo+1:PosContrNo+NegContrNo,])), nrow=4)}
+  if (OrderContr == "negative") {neg <- matrix(as.numeric(as.matrix(data[1:NegContrNo,])), nrow=NegContrNo)} ## need to change here
+  else {neg <- matrix(as.numeric(as.matrix(data[(PosContrNo+1):(PosContrNo+NegContrNo),])), nrow=NegContrNo)}
 
   #plot
   cpm <- cpm(neg, lib.size=lib_size, log=T)
@@ -75,46 +78,63 @@ qualityCheck <- function(data.in, TableOut=FALSE, PosContrNo=4, NegContrNo=4, Or
   if (sum(delta_cpm > 3*stdev_cpm+1)>0) {y_up <- max(delta_cpm)}
   y_down <- -3*stdev_cpm-1
   if (sum(delta_cpm < -3*stdev_cpm-1)>0) {y_down <- min(delta_cpm)}
-  plot(c(1:length(delta_cpm)), delta_cpm, ylim=c(y_down,y_up), col="blue3", pch=19, las=1, xaxt='n',
-       ylab="Difference from expected value", xlab=NA)
-  abline(v=c(1:length(delta_cpm)), col="grey90")
-  points(c(1:length(delta_cpm)), delta_cpm, col="blue3", pch=19, las=1, xaxt='n', ylab="Difference from expected value", xlab=NA)
-  axis(1, at=c(1:length(delta_cpm)), labels = sample_names, las=2, cex.axis=0.7)
-  abline(2*stdev_cpm,0, lty=2, col="green", lwd=2)
-  abline(-2*stdev_cpm,0, lty=2, col="green", lwd=2)
-  abline(3*stdev_cpm,0, lty=2, col="red", lwd=2)
-  abline(-3*stdev_cpm,0, lty=2, col="red", lwd=2)
+  datin <- data.frame("ecs"=as.character(c(1:length(delta_cpm))),  "uai"=delta_cpm)
+  ggplot(datin, aes(x=ecs, y=uai)) +
+    ylim(y_down, y_up) +
+    geom_vline(xintercept=c(1:length(delta_cpm)), color = "grey85", size=0.5) +
+    geom_hline(yintercept=2*stdev_cpm, linetype="dashed", color = "green", size=0.5) +
+    geom_hline(yintercept=-2*stdev_cpm, linetype="dashed", color = "green", size=0.5) +
+    geom_hline(yintercept=3*stdev_cpm, linetype="dashed", color = "red", size=0.5) +
+    geom_hline(yintercept=-3*stdev_cpm, linetype="dashed", color = "red", size=0.5) +
+    theme_bw() +
+    ylab("Difference from expected value") +
+    theme(axis.title.x=element_blank()) +
+    scale_x_discrete(breaks=datin$ecs, labels= sample_names) +
+    geom_point(color="blue4") +
+    theme(axis.text.x = element_text(angle = 45, hjust=1))
   dev.off()
   #percentage of reads allocated to negative control
   perc <- colSums(neg)/lib_size
   res <- rep("OK", ncol(neg))
-  res[perc > 0.1] <- "ALERT"
-  table <- cbind(sample_names, round(perc*100, digits=3), res)
-  colnames(table) <- c("SAMPLE", "PercentageOverLibrary", "QC_result")
-  print(cbind(sample_names, round(perc*100, digits=3), res))
+  res[(abs(delta_cpm) > 2*stdev_cpm) & (abs(delta_cpm) < 3*stdev_cpm)] <- "ALERT"
+  res[abs(delta_cpm) >= 3*stdev_cpm] <- "FAIL"
+  res_perc <- rep("OK", ncol(neg))
+  res_perc[perc > 0.1] <- "ALERT"
+  res_final <- rep("OK", ncol(neg))
+  res_final[res == "FAIL" | res_perc =="FAIL"] <- "FAIL"
+  res_final[res == "ALERT" & res_perc !="FAIL"] <- "ALERT"
+  res_final[res != "FAIL" & res_perc =="ALERT"] <- "ALERT"
+  table <- as.data.frame(cbind("sample_names"=sample_names, "PercentageOverLibrary"=round(perc*100, digits=3), "QC_result_deviance"=res,  "QC_result_Percentage"=res_perc, "QC_result"=res_final))
   write.table(table, "QC_neg_table.txt", quote=F, row.names=F, col.names=T)
 
 
   ## positive controls ##
-  if (OrderContr == "positive") {pos <- matrix(as.numeric(as.matrix(data[1:PosContrNo,])), nrow=4)}
-  else {pos <- matrix(as.numeric(as.matrix(data[NegContrNo+1:NegContrNo+PosContrNo,])), nrow=4)}
+  if (OrderContr == "positive") {pos <- matrix(as.numeric(as.matrix(data[1:PosContrNo,])), nrow=PosContrNo)}
+  else {pos <- matrix(as.numeric(as.matrix(data[(NegContrNo+1):(NegContrNo+PosContrNo),])), nrow=PosContrNo)}
 
   perc2 <- colSums(pos)/lib_size
   res2 <- rep("OK", ncol(pos))
   res2[perc2 > 0.1] <- "ALERT"
   res2[perc2 > 0.4] <- "FAIL"
-  table2 <- cbind(sample_names, round(perc2*100, digits=3), res2)
-  colnames(table2) <- c("SAMPLE", "PercentageOverLibrary", "QC_result")
-  print(cbind(sample_names, round(perc2*100, digits=3), res2))
+  table2 <- as.data.frame(cbind("sample_names"=sample_names, "PercentageOverLibrary"=round(perc2*100, digits=3), "QC_result"=res2))
   write.table(table2, "QC_pos_table.txt", quote=F, row.names=F)
   png("QC_pos_plot.png", width = 700, height = 700)
-  plot(c(1:length(delta_cpm)), perc2, ylim=c(0,1), col="blue3", pch=19, las=1, xaxt='n', yaxt='n',
-       ylab="% allocated to positive controls", xlab=NA)
-  abline(v=c(1:length(delta_cpm)), col="grey90")
-  points(c(1:length(delta_cpm)), perc2, ylim=c(0,1), col="blue3", pch=19, las=1, xaxt='n', yaxt='n',
-         ylab="% allocated to positive controls", xlab=NA)
-  axis(1, at=c(1:length(delta_cpm)), labels = sample_names, las=2, cex.axis=1)
-  axis(2, at=c(0,0.2,0.4,0.6,0.8,1), lab=c(0,20,40,60,80,100), las=2)
-  abline(0.4,0, lty=2, col="red", lwd=2)
+
+  datin2 <- data.frame("ecs"=as.character(c(1:length(delta_cpm))),  "uai"=perc2*100)
+  ggplot(datin2, aes(x=ecs, y=uai)) +
+    geom_vline(xintercept=c(1:length(delta_cpm)), color = "grey85", size=0.5) +
+    geom_hline(yintercept=40, linetype="dashed", color = "red", size=0.5) +
+    theme_bw() +
+    ylab("% allocated to positive controls") +
+    theme(axis.title.x=element_blank()) +
+    scale_x_discrete(breaks=datin$ecs, labels= sample_names) +
+    scale_y_continuous(breaks = c(0,20,40,60,80,100), limits = c(0,100)) +
+    geom_point(color="blue4") +
+    theme(axis.text.x = element_text(angle = 45, hjust=1))
   dev.off()
+
+  qc.alert <- unique(c(table$sample_names[table$QC_result == "ALERT"], table2$sample_names[table2$QC_result == "ALERT"]))
+  qc.fail <- unique(c(table$sample_names[table$QC_result == "FAIL"], table2$sample_names[table2$QC_result == "FAIL"]))
+  return(qc.alert)
+  return(qc.fail)
 }
