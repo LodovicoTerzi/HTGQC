@@ -2,6 +2,10 @@
 
 ## HTGQC is an R package for quality check of HTG EdgeSeq datasets.
 
+To install, please install the "devtools" R package, then run
+
+`devtools::install_github("LodovicoTerzi/HTGQC")`
+
 The package has two main functions:
 
 `readHTG` reads the unformatted Excel file as it outputs from the HTG Edge-seq machines.
