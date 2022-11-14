@@ -27,6 +27,14 @@ library(ggplot2)
 library(edgeR)
 library(assertthat)
 library(knitr)
+library(devtools)
+```
+
+And now install and load HTGQC
+
+```{install package}
+devtools::install_github("LodovicoTerzi/HTGQC")
+library(HTGQC)
 ```
 
 If the input file is the unformatted Excel file, it can be read using the readHTG function as follows:
