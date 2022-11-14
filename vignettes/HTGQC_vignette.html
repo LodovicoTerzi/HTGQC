@@ -329,7 +329,9 @@ library(ggplot2)
 library(edgeR)
 library(assertthat)
 library(knitr)
-library(devtools)</code></pre>
+library(devtools)
+library(dplyr)
+library(magrittr)</code></pre>
 <p>And now install and load HTGQC</p>
 <pre class="install"><code>devtools::install_github(&quot;LodovicoTerzi/HTGQC&quot;)
 library(HTGQC)</code></pre>
@@ -338,9 +340,8 @@ library(HTGQC)</code></pre>
 dat.formatted &lt;- readHTG(dat.unformatted)
 head(dat.formatted)</code></pre>
 <p>Otherwise, please load the pre-formatted file with gene names as row names</p>
-<pre class="readhtg"><code>library(dplyr)
-path.formatted &lt;- &quot;/path/to/preformatted/file&quot;
-dat.formatted &lt;- read_excel(dat.unformatted) %&gt;% as.data.frame() %&gt;% column_to_rownames(&quot;GeneID&quot;)
+<pre class="readhtg"><code>path.formatted &lt;- &quot;/path/to/preformatted/file&quot;
+dat.formatted &lt;- read_excel(path.unformatted) %&gt;% as.data.frame() %&gt;% column_to_rownames(&quot;GeneID&quot;)
 head(dat.formatted)</code></pre>
 <p>Now you can run the quality control as follows</p>
 <pre class="qualitycontrol"><code>qualityCheck(dat.formatted)</code></pre>
@@ -369,8 +370,10 @@ The red line indicates ther threshold for the FAIL filter, set at 40%.<br />
 <br />
 Finally, below is an example of the Positive Controls table, wthe the “QC_result” variable indicating for each sample if the quality control was OK, ALERT, or FAIL.<br />
 </p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">tab &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;https://raw.githubusercontent.com/LodovicoTerzi/HTGQC/main/dataExample/QC/PositiveTable.csv&quot;</span>)  <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">column_to_rownames</span>(<span class="st">&quot;sample_names&quot;</span>)</a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">knitr<span class="op">::</span><span class="kw">kable</span>(<span class="kw">head</span>(tab))</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">library</span>(dplyr)</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="kw">library</span>(tibble)</a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">tab &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;https://raw.githubusercontent.com/LodovicoTerzi/HTGQC/main/dataExample/QC/PositiveTable.csv&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">column_to_rownames</span>(<span class="st">&quot;sample_names&quot;</span>)</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">knitr<span class="op">::</span><span class="kw">kable</span>(<span class="kw">head</span>(tab))</a></code></pre></div>
 <table>
 <thead>
 <tr class="header">
