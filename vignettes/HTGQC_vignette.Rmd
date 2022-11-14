@@ -29,6 +29,7 @@ library(assertthat)
 library(knitr)
 library(devtools)
 library(dplyr)
+library(magrittr)
 ```
 
 And now install and load HTGQC
