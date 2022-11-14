@@ -85,7 +85,7 @@ The red line indicates ther threshold for the FAIL filter, set at 40%. \
 Finally, below is an example of the Positive Controls table, wthe the "QC_result" variable indicating for each sample if the quality control was OK, ALERT, or FAIL. \
 
 ```{r echo =TRUE}
-tab <- read.csv("https://raw.githubusercontent.com/LodovicoTerzi/HTGQC/main/dataExample/QC/PositiveTable.csv")  %>% column_to_rownames("sample_names")
+tab <- read.csv("https://raw.githubusercontent.com/LodovicoTerzi/HTGQC/main/dataExample/QC/PositiveTable.csv") %>% column_to_rownames("sample_names")
 knitr::kable(head(tab))
 ```
 
