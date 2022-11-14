@@ -33,11 +33,12 @@ readHTG <- function(data.in, PreFormatted=FALSE){
 
     # checks
     assertthat::assert_that(!is.na(match("Data", excel_sheets(data.in))), msg = "Excel file should contain a 'Data' sheet")
-    assertthat::assert_that(!is.na(match("Sample Names", data[,1])), msg = "File should contain a 'Sample Name' box")
-    assertthat::assert_that(!is.na(match("ANT1", data[,1])), msg = "First positive control should be termed 'ANT1'")
 
     # read data
     data <- as.data.frame(read_excel(data.in, "Data"))
+
+    assertthat::assert_that(!is.na(match("Sample Name", data[,1])), msg = "File should contain a 'Sample Name' box")
+    assertthat::assert_that(!is.na(match("ANT1", data[,1])), msg = "First positive control should be termed 'ANT1'")
 
     # get index of sample names and gene starting position
     ind.id <- match("Sample Name", data[,1])
