@@ -28,6 +28,7 @@ library(edgeR)
 library(assertthat)
 library(knitr)
 library(devtools)
+library(dplyr)
 ```
 
 And now install and load HTGQC
@@ -48,9 +49,8 @@ head(dat.formatted)
 Otherwise, please load the pre-formatted file with gene names as row names
 
 ```{readHTG}
-library(dplyr)
 path.formatted <- "/path/to/preformatted/file"
-dat.formatted <- read_excel(dat.unformatted) %>% as.data.frame() %>% column_to_rownames("GeneID")
+dat.formatted <- read_excel(path.unformatted) %>% as.data.frame() %>% column_to_rownames("GeneID")
 head(dat.formatted)
 ```
 
