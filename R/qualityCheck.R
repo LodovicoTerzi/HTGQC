@@ -73,13 +73,12 @@ qualityCheck <- function(data.in, TableOut=FALSE, PosContrNo=4, NegContrNo=4, Or
   mean_all <- mean(mean_cpm)
   delta_cpm <- mean_cpm - mean_all
   stdev_cpm <- sd(mean_cpm)
-  png("QC_neg_plot.png", width = 1000, height = 700)
   y_up <- 3*stdev_cpm+1
   if (sum(delta_cpm > 3*stdev_cpm+1)>0) {y_up <- max(delta_cpm)}
   y_down <- -3*stdev_cpm-1
   if (sum(delta_cpm < -3*stdev_cpm-1)>0) {y_down <- min(delta_cpm)}
   datin <- data.frame("ecs"=as.character(c(1:length(delta_cpm))),  "uai"=delta_cpm)
-  ggplot(datin, aes(x=ecs, y=uai)) +
+  negplot <- ggplot(datin, aes(x=ecs, y=uai)) +
     ylim(y_down, y_up) +
     geom_vline(xintercept=c(1:length(delta_cpm)), color = "grey85", size=0.5) +
     geom_hline(yintercept=2*stdev_cpm, linetype="dashed", color = "green", size=0.5) +
@@ -92,7 +91,9 @@ qualityCheck <- function(data.in, TableOut=FALSE, PosContrNo=4, NegContrNo=4, Or
     scale_x_discrete(breaks=datin$ecs, labels= sample_names) +
     geom_point(color="blue4") +
     theme(axis.text.x = element_text(angle = 45, hjust=1))
-  dev.off()
+
+  ggsave("NegativePlot.svg", negplot, device="svg")
+
   #percentage of reads allocated to negative control
   perc <- colSums(neg)/lib_size
   res <- rep("OK", ncol(neg))
@@ -105,7 +106,7 @@ qualityCheck <- function(data.in, TableOut=FALSE, PosContrNo=4, NegContrNo=4, Or
   res_final[res == "ALERT" & res_perc !="FAIL"] <- "ALERT"
   res_final[res != "FAIL" & res_perc =="ALERT"] <- "ALERT"
   table <- as.data.frame(cbind("sample_names"=sample_names, "PercentageOverLibrary"=round(perc*100, digits=3), "QC_result_deviance"=res,  "QC_result_Percentage"=res_perc, "QC_result"=res_final))
-  write.table(table, "QC_neg_table.txt", quote=F, row.names=F, col.names=T)
+  write.csv(table, file = "NegativeTable.csv", row.names = F)
 
 
   ## positive controls ##
@@ -117,11 +118,10 @@ qualityCheck <- function(data.in, TableOut=FALSE, PosContrNo=4, NegContrNo=4, Or
   res2[perc2 > 0.1] <- "ALERT"
   res2[perc2 > 0.4] <- "FAIL"
   table2 <- as.data.frame(cbind("sample_names"=sample_names, "PercentageOverLibrary"=round(perc2*100, digits=3), "QC_result"=res2))
-  write.table(table2, "QC_pos_table.txt", quote=F, row.names=F)
-  png("QC_pos_plot.png", width = 700, height = 700)
+  write.csv(table2, file = "PositiveTable.csv", row.names = F)
 
   datin2 <- data.frame("ecs"=as.character(c(1:length(delta_cpm))),  "uai"=perc2*100)
-  ggplot(datin2, aes(x=ecs, y=uai)) +
+  posplot <- ggplot(datin2, aes(x=ecs, y=uai)) +
     geom_vline(xintercept=c(1:length(delta_cpm)), color = "grey85", size=0.5) +
     geom_hline(yintercept=40, linetype="dashed", color = "red", size=0.5) +
     theme_bw() +
@@ -131,7 +131,7 @@ qualityCheck <- function(data.in, TableOut=FALSE, PosContrNo=4, NegContrNo=4, Or
     scale_y_continuous(breaks = c(0,20,40,60,80,100), limits = c(0,100)) +
     geom_point(color="blue4") +
     theme(axis.text.x = element_text(angle = 45, hjust=1))
-  dev.off()
+  ggsave("PositivePlot.svg", posplot, device="svg")
 
   qc.alert <- unique(c(table$sample_names[table$QC_result == "ALERT"], table2$sample_names[table2$QC_result == "ALERT"]))
   qc.fail <- unique(c(table$sample_names[table$QC_result == "FAIL"], table2$sample_names[table2$QC_result == "FAIL"]))
