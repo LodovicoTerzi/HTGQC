@@ -66,7 +66,10 @@ qualityCheck(dat.formatted)
 Below is an example of the Negative Controls plot. \
 The green and red line represent the 2\*standard deviation and 3\*standard deviation range. \
 
-![NegPlot](/Users/lodovico/Desktop/IOR/HTG_QC/QC/NegativePlot.svg){width=100%}
+```{r out.width="100%"}
+url <- "https://raw.githubusercontent.com/LodovicoTerzi/HTGQC/main/vignettes/NegativePlot.svg"
+knitr::include_graphics(url)
+```
 
 
 
@@ -76,12 +79,16 @@ The green and red line represent the 2\*standard deviation and 3\*standard devia
 Similarly, below is an example of the Positive Controls plot. \
 The red line indicates ther threshold for the FAIL filter, set at 40%. \
 
-![PosPlot](/Users/lodovico/Desktop/IOR/HTG_QC/QC/PositivePlot.svg){width=100%}
+```{r out.width="100%"}
+url <- "https://raw.githubusercontent.com/LodovicoTerzi/HTGQC/main/vignettes/PositivePlot.svg"
+knitr::include_graphics(url)
+```
 
 \
 \
 \
-Finally, below is an example of the Positive Controls table, wthe the "QC_result" variable indicating for each sample if the quality control was OK, ALERT, or FAIL. \
+Finally, below is an example of the Positive Controls table, the "QC_result" variable indicating for each sample if the quality control was OK, ALERT, or FAIL. \
+
 
 ```{r echo =TRUE}
 library(dplyr)
